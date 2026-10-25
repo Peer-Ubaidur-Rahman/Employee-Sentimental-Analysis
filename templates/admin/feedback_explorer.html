@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "_macros.html" import chip, pagination %}
+{% block title %}Feedback explorer{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Feedback explorer</h1><p>{{ total }} result{{ '' if total == 1 else 's' }}. Anonymous submissions are shown without a name.</p></div></div>
+
+<form method="get" class="card-s p-3 mb-3" id="filterForm">
+  <div class="row g-2 align-items-end">
+    <div class="col-lg-3"><label class="form-label" for="q">Search text or employee name</label>
+      <input class="form-control" id="q" name="q" value="{{ q }}" maxlength="100" placeholder="e.g. workload"></div>
+    <div class="col-6 col-lg-2"><label class="form-label" for="sentiment">Sentiment</label>
+      <select class="form-select" id="sentiment" name="sentiment"><option value="">All</option>
+        {% for s in sentiments %}<option {{ 'selected' if s == sentiment }}>{{ s }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-lg-2"><label class="form-label" for="department">Department</label>
+      <select class="form-select" id="department" name="department"><option value="">All</option>
+        {% for d in departments %}<option value="{{ d.id }}" {{ 'selected' if d.id == dept }}>{{ d.name }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-lg-2"><label class="form-label" for="date_from">From</label><input class="form-control" type="date" id="date_from" name="date_from" value="{{ date_from }}"></div>
+    <div class="col-6 col-lg-2"><label class="form-label" for="date_to">To</label><input class="form-control" type="date" id="date_to" name="date_to" value="{{ date_to }}"></div>
+    <div class="col-lg-1 d-flex gap-1"><button class="btn btn-primary flex-grow-1" type="submit" title="Apply filters"><i class="bi bi-funnel"></i></button>
+      <a class="btn btn-outline-s" href="{{ url_for('admin.feedback_explorer') }}" title="Reset filters"><i class="bi bi-x-lg"></i></a></div>
+  </div>
+</form>
+
+<div class="card-s">
+  {% if rows %}
+  <div class="table-wrap"><table class="table-s table-stack">
+    <thead><tr><th>Submitted</th><th>From</th><th>Department</th><th>Feedback</th><th class="num">Rating</th><th>Sentiment</th><th></th></tr></thead>
+    <tbody>{% for r in rows %}
+      <tr class="clickable" data-feedback-id="{{ r.id }}" data-url="{{ url_for('admin.feedback_detail', feedback_id=r.id) }}">
+        <td data-label="Submitted">{{ r.submitted_at|fmt_dt }}</td><td data-label="From">{{ r.submitter }}</td><td data-label="Department">{{ r.department }}</td>
+        <td data-label="Feedback"><div class="clip">{{ r.feedback_text }}</div></td><td data-label="Rating" class="num">{{ r.overall_rating or '–' }}</td>
+        <td data-label="Sentiment">{{ chip(r.sentiment) }}</td>
+        <td><button class="btn btn-ghost btn-sm" type="button" data-open aria-label="Inspect feedback {{ r.id }}"><i class="bi bi-box-arrow-in-right"></i></button></td></tr>
+    {% endfor %}</tbody></table></div>
+  {% else %}
+  <div class="empty"><i class="bi bi-search"></i>{% if args %}No feedback matches these filters.<br><a href="{{ url_for('admin.feedback_explorer') }}">Clear filters</a>{% else %}No feedback has been submitted yet.{% endif %}</div>
+  {% endif %}
+</div>
+{{ pagination('admin.feedback_explorer', page, pages, args) }}
+
+<div class="scrim" id="drawerScrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" aria-label="Feedback details">
+  <div class="d-flex justify-content-between align-items-start mb-3"><h3 class="mb-0">Feedback details</h3>
+    <button class="btn btn-ghost" id="drawerClose" type="button" aria-label="Close"><i class="bi bi-x-lg"></i></button></div>
+  <div id="drawerBody" class="text-muted">Select a row to inspect it.</div>
+</aside>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/feedback_explorer.js') }}"></script>{% endblock %}

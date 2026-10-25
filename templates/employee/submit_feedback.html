@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Submit feedback{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Share your feedback</h1><p>Tell us about your recent experience at work.</p></div></div>
+{% if not model_ready %}
+<div class="notice notice-warn mb-3"><strong>Sentiment model unavailable.</strong> Feedback cannot be submitted until an administrator
+  runs <code>python train_model.py</code>. Nothing is saved while the model is missing.</div>
+{% endif %}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <form method="post" class="card-s" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="card-head"><h3>Your feedback</h3></div>
+      <div class="card-body-s">
+        <label class="form-label" for="feedback_text">What is working well, and what could be better?</label>
+        <textarea class="form-control" id="feedback_text" name="feedback_text" rows="7" required
+                  minlength="{{ min_chars }}" maxlength="{{ max_chars }}" data-counter="#charCount" data-min="{{ min_chars }}"
+                  placeholder="Be specific. Describe situations rather than people.">{{ form.get('feedback_text','') }}</textarea>
+        <div class="form-text text-end tnum" id="charCount">0 / {{ max_chars }}</div>
+
+        <div class="row g-3 mt-1">
+          {% for field, label in [('overall_rating','Overall experience'),('management_rating','Management'),('workload_rating','Workload'),('culture_rating','Team culture')] %}
+          <div class="col-sm-6"><div class="form-label">{{ label }} <span class="text-muted">(optional, 1–5)</span></div>
+            <div class="rating-group" role="radiogroup" aria-label="{{ label }}">
+              {% for i in range(1, 6) %}
+              <input type="radio" name="{{ field }}" id="{{ field }}_{{ i }}" value="{{ i }}" {{ 'checked' if form.get(field) == i|string }}>
+              <label for="{{ field }}_{{ i }}">{{ i }}</label>
+              {% endfor %}
+            </div></div>
+          {% endfor %}
+        </div>
+        <div class="form-check mt-4">
+          <input class="form-check-input" type="checkbox" id="is_anonymous" name="is_anonymous" {{ 'checked' if request.form.get('is_anonymous') }}>
+          <label class="form-check-label" for="is_anonymous">Submit anonymously (HR will not see my name)</label>
+        </div>
+      </div>
+      <div class="p-3 border-top d-flex justify-content-end gap-2">
+        <a class="btn btn-outline-s" href="{{ url_for('employee.dashboard') }}">Cancel</a>
+        <button class="btn btn-primary" type="submit" {{ 'disabled' if not model_ready }}>Submit feedback</button>
+      </div>
+    </form>
+  </div>
+  <div class="col-lg-4">
+    <div class="notice"><h3 class="h6">How your feedback is processed</h3>
+      <ul class="ps-3 mb-2">
+        <li>Your text is cleaned and scored on our own server by a machine-learning model. It is not sent to any external service.</li>
+        <li>The result (Positive, Neutral or Negative) is an <strong>automated estimate</strong> and can be wrong, especially for sarcasm or mixed opinions.</li>
+        <li>HR sees feedback only in aggregate dashboards or individually in the explorer. Anonymous submissions never show your name.</li>
+        <li>Do not include passwords, medical details or other sensitive personal data.</li>
+      </ul></div>
+  </div>
+</div>
+{% endblock %}

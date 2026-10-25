@@ -1,0 +1,74 @@
+{
+  "model_version": "lr-tfidf-202610250629-30e064aa",
+  "trained_at": "2026-10-25T06:29:05.757290+00:00",
+  "dataset_path": "employee_feedback.csv",
+  "dataset_sha256": "30e064aaba830f1037be2ac3f5e0c87de84470cb36e1057e23b63613ebc8c340",
+  "dataset_rows": 732,
+  "dataset_sources": [
+    "synthetic-handwritten",
+    "synthetic-template"
+  ],
+  "dataset_is_synthetic": true,
+  "preprocessing_backend": "fallback",
+  "labels": [
+    "Negative",
+    "Neutral",
+    "Positive"
+  ],
+  "test_size": 0.2,
+  "random_state": 42,
+  "test_split": {
+    "accuracy": 0.9319727891156463,
+    "precision_weighted": 0.9324822695035461,
+    "recall_weighted": 0.9319727891156463,
+    "f1_weighted": 0.9320286195286196,
+    "precision_macro": 0.9324822695035461,
+    "recall_macro": 0.9319727891156462,
+    "f1_macro": 0.9320286195286195,
+    "confusion_matrix": [
+      [
+        45,
+        2,
+        2
+      ],
+      [
+        2,
+        47,
+        0
+      ],
+      [
+        3,
+        1,
+        45
+      ]
+    ],
+    "n": 147
+  },
+  "challenge_set": {
+    "accuracy": 0.6222222222222222,
+    "precision_weighted": 0.6192564745196325,
+    "recall_weighted": 0.6222222222222222,
+    "f1_weighted": 0.6150301755440363,
+    "precision_macro": 0.6192564745196324,
+    "recall_macro": 0.6222222222222222,
+    "f1_macro": 0.6150301755440363,
+    "confusion_matrix": [
+      [
+        7,
+        4,
+        4
+      ],
+      [
+        2,
+        12,
+        1
+      ],
+      [
+        3,
+        3,
+        9
+      ]
+    ],
+    "n": 45
+  }
+}

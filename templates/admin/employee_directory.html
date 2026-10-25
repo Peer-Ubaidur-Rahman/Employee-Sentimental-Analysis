@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pagination %}
+{% block title %}Employee directory{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Employee directory</h1><p>{{ total }} employee{{ '' if total == 1 else 's' }} ·
+  {% if is_full %}You can activate, deactivate and issue temporary passwords.{% else %}Read-only view: emails and account actions require the HR Administrator role.{% endif %}</p></div></div>
+<form method="get" class="card-s p-3 mb-3"><div class="row g-2 align-items-end">
+  <div class="col-lg-4"><label class="form-label" for="q">Search</label><input class="form-control" id="q" name="q" value="{{ q }}" maxlength="100" placeholder="Name{{ ', email' if is_full }} or employee code"></div>
+  <div class="col-6 col-lg-3"><label class="form-label" for="department">Department</label><select class="form-select" id="department" name="department"><option value="">All</option>
+    {% for d in departments %}<option value="{{ d.id }}" {{ 'selected' if d.id == dept }}>{{ d.name }}</option>{% endfor %}</select></div>
+  <div class="col-6 col-lg-2"><label class="form-label" for="status">Status</label><select class="form-select" id="status" name="status">
+    <option value="">All</option><option value="active" {{ 'selected' if status == 'active' }}>Active</option><option value="inactive" {{ 'selected' if status == 'inactive' }}>Inactive</option></select></div>
+  <div class="col-lg-3 d-flex gap-2"><button class="btn btn-primary" type="submit">Apply</button><a class="btn btn-outline-s" href="{{ url_for('admin.employee_directory') }}">Reset</a></div>
+</div></form>
+<div class="card-s">
+  {% if rows %}
+  <div class="table-wrap"><table class="table-s table-stack">
+    <thead><tr><th>Code</th><th>Name</th>{% if is_full %}<th>Email</th>{% endif %}<th>Department</th><th>Role</th><th class="num">Experience</th><th>Last sign-in</th><th>Status</th>{% if is_full %}<th>Actions</th>{% endif %}</tr></thead>
+    <tbody>{% for r in rows %}
+      <tr><td data-label="Code">{{ r.emp_code }}</td><td data-label="Name">{{ r.full_name }}</td>{% if is_full %}<td data-label="Email">{{ r.email }}</td>{% endif %}
+        <td data-label="Department">{{ r.department }}</td><td data-label="Role">{{ r.role_title }}</td><td data-label="Experience" class="num">{{ r.years_experience }} yrs</td>
+        <td data-label="Last sign-in">{{ r.last_login_at|fmt_dt }}</td>
+        <td data-label="Status">{% if r.is_active %}<span class="chip chip-positive">Active</span>{% else %}<span class="chip chip-none">Inactive</span>{% endif %}</td>
+        {% if is_full %}<td data-label="Actions"><div class="d-flex gap-1">
+          <form method="post" action="{{ url_for('admin.set_employee_status', emp_id=r.id) }}" data-confirm="{{ 'Deactivate' if r.is_active else 'Reactivate' }} {{ r.full_name }}?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-s btn-sm" type="submit">{{ 'Deactivate' if r.is_active else 'Activate' }}</button></form>
+          <form method="post" action="{{ url_for('admin.reset_employee_password', emp_id=r.id) }}" data-confirm="Issue a temporary password for {{ r.full_name }}? Their current password stops working.">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-s btn-sm" type="submit">Reset password</button></form></div></td>{% endif %}</tr>
+    {% endfor %}</tbody></table></div>
+  {% else %}<div class="empty"><i class="bi bi-people"></i>No employees match. {% if not args %}Employees appear here after they register.{% endif %}</div>{% endif %}
+</div>
+{{ pagination('admin.employee_directory', page, pages, args) }}
+{% endblock %}

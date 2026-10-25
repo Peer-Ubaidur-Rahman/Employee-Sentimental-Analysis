@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_macros.html" import chip, pagination %}
+{% block title %}My history{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My feedback history</h1><p>{{ total }} submission{{ '' if total == 1 else 's' }}. Only you can see this page.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('employee.submit_feedback') }}"><i class="bi bi-pencil-square"></i> New feedback</a></div>
+
+{% if highlight %}
+<div class="card-s mb-3" style="border-color: var(--primary)">
+  <div class="card-body-s">
+    <div class="d-flex flex-wrap align-items-center gap-3">
+      <div><div class="metric-label">Predicted sentiment of your latest feedback</div><div class="mt-1">{{ chip(highlight.sentiment) }}</div></div>
+      <div><div class="metric-label">Model confidence</div><div class="metric-value" style="font-size:20px">{{ '%.0f'|format((highlight.confidence or 0) * 100) }}%</div></div>
+      <div class="flex-grow-1 text-muted small">This is an automated estimate from a statistical model. It is not a judgement about you and may be wrong.</div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card-s">
+  {% if rows %}
+  <div class="table-wrap"><table class="table-s table-stack">
+    <thead><tr><th>Submitted</th><th>Feedback</th><th>Ratings (overall / mgmt / workload / culture)</th><th>Visibility</th><th>Predicted sentiment</th><th class="num">Confidence</th></tr></thead>
+    <tbody>{% for r in rows %}
+      <tr><td data-label="Submitted">{{ r.submitted_at|fmt_dt }}</td>
+          <td data-label="Feedback" style="max-width:420px; white-space:normal">{{ r.feedback_text }}</td>
+          <td data-label="Ratings" class="tnum">{{ r.overall_rating or '–' }} / {{ r.management_rating or '–' }} / {{ r.workload_rating or '–' }} / {{ r.culture_rating or '–' }}</td>
+          <td data-label="Visibility">{{ 'Anonymous' if r.is_anonymous else 'Named' }}</td>
+          <td data-label="Sentiment">{{ chip(r.sentiment) }}</td>
+          <td data-label="Confidence" class="num">{% if r.confidence is not none %}{{ '%.0f'|format(r.confidence * 100) }}%{% else %}–{% endif %}</td></tr>
+    {% endfor %}</tbody></table></div>
+  {% else %}
+  <div class="empty"><i class="bi bi-inbox"></i>No feedback yet. When you submit feedback it will appear here with its predicted sentiment.</div>
+  {% endif %}
+</div>
+{{ pagination('employee.history', page, pages, {}) }}
+{% endblock %}

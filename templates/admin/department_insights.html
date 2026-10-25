@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_macros.html" import sbar %}
+{% block title %}Department insights{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Department insights</h1><p>Comparison across departments · last {{ days }} days · groups under {{ min_group }} items are hidden</p></div>
+  <div class="btn-group">{% for p in periods %}<a class="btn btn-sm {{ 'btn-primary' if p == days else 'btn-outline-s' }}" href="{{ url_for('admin.department_insights', days=p) }}">{{ p }}d</a>{% endfor %}</div></div>
+<div class="row g-3">
+  <div class="col-lg-7"><div class="card-s"><div class="card-head"><h3>Comparison</h3></div>
+    <div class="table-wrap"><table class="table-s table-stack">
+      <thead><tr><th>Department</th><th class="num">Items</th><th class="num">Headcount</th><th class="num">Participation</th><th class="num">Avg rating</th><th style="min-width:140px">Mix</th></tr></thead>
+      <tbody>{% for d in depts %}
+        <tr><td data-label="Department">{{ d.name }}</td><td data-label="Items" class="num">{{ d.n }}</td><td data-label="Headcount" class="num">{{ d.headcount }}</td>
+          {% if d.pos_pct is defined %}
+            <td data-label="Participation" class="num">{{ d.participation }}%</td><td data-label="Avg rating" class="num">{{ d.avg_rating if d.avg_rating is not none else '–' }}</td>
+            <td data-label="Mix">{{ sbar(d.pos_pct, d.neu_pct, d.neg_pct) }}</td>
+          {% elif d.suppressed %}<td colspan="3" class="muted">Hidden: fewer than {{ min_group }} items</td>
+          {% else %}<td colspan="3" class="muted">No feedback in period</td>{% endif %}</tr>
+      {% endfor %}</tbody></table></div></div></div>
+  <div class="col-lg-5"><div class="card-s"><div class="card-head"><h3>Sentiment mix (%)</h3></div>
+    <div class="card-body-s">{% if chart %}<div class="chart-box" style="height:{{ 60 + chart|length * 44 }}px"><canvas id="deptChart" aria-label="Sentiment by department" role="img"></canvas></div>
+    {% else %}<div class="empty"><i class="bi bi-bar-chart"></i>No department has enough feedback to display.</div>{% endif %}</div></div></div>
+</div>
+<p class="muted small mt-3">Participation = employees who submitted at least once ÷ active headcount. Small groups are suppressed because percentages from few people can identify individuals.</p>
+<script id="chart-data" type="application/json">{{ {'departments': chart}|tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard_charts.js') }}"></script>
+{% endblock %}

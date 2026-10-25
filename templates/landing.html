@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sentinel HR · Employee Sentiment Analysis</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/sentinel.css') }}" rel="stylesheet">
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="land-nav">
+      <span class="d-flex align-items-center gap-2 text-white fw-semibold"><span class="brand-mark"><i class="bi bi-shield-check"></i></span> Sentinel HR</span>
+      <div class="d-flex gap-2">
+        <a class="btn btn-sm btn-outline-light" href="{{ url_for('auth.employee_login') }}">Employee sign in</a>
+        <a class="btn btn-sm btn-primary" href="{{ url_for('auth.admin_login') }}">HR administration</a>
+      </div>
+    </div>
+    <div class="row py-5"><div class="col-lg-8">
+      <h1>Employee Sentiment Analysis &amp; Workforce Intelligence</h1>
+      <p class="mt-3 fs-6">Employees share free-text feedback. A classical machine-learning model (TF-IDF features and Logistic
+        Regression, trained with scikit-learn) estimates whether each comment is positive, neutral or negative, and HR sees
+        privacy-protected trends by department and over time.</p>
+      <div class="d-flex flex-wrap gap-2 mt-4">
+        <a class="btn btn-primary" href="{{ url_for('auth.employee_register') }}">Create employee account</a>
+        <a class="btn btn-outline-light" href="{{ url_for('auth.employee_login') }}">Sign in</a>
+      </div>
+    </div></div>
+  </div>
+</header>
+
+<section class="container py-5">
+  <h2 class="mb-4">How it works</h2>
+  <div class="row g-3">
+    {% for icon, title, text in [
+      ('bi-pencil-square','1. Employee submits','Feedback plus optional 1–5 workplace ratings, optionally anonymous.'),
+      ('bi-funnel','2. Text is cleaned','Lower-casing, punctuation and number removal, tokenisation, stop-word removal (negations kept) and lemmatisation.'),
+      ('bi-cpu','3. Model predicts','TF-IDF vectors go to a trained Logistic Regression classifier that returns a label and probability.'),
+      ('bi-graph-up','4. HR sees trends','Charts, department comparison and reports calculated live from database records.') ] %}
+    <div class="col-md-6 col-lg-3"><div class="card-s feature"><i class="bi {{ icon }}"></i><h3 class="h6 mt-2">{{ title }}</h3><p class="muted mb-0">{{ text }}</p></div></div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="container pb-5">
+  <div class="row g-3">
+    <div class="col-lg-6"><div class="card-s feature"><h3 class="h6"><i class="bi bi-shield-lock me-1"></i> Privacy by design</h3>
+      <ul class="mb-0 muted ps-3"><li>Anonymous submissions never reveal the employee to HR.</li>
+      <li>Groups smaller than a minimum size are hidden from sentiment breakdowns.</li>
+      <li>Employees only ever see their own history. Exports and feedback views are audit-logged.</li></ul></div></div>
+    <div class="col-lg-6"><div class="card-s feature"><h3 class="h6"><i class="bi bi-exclamation-triangle me-1"></i> Honest about limitations</h3>
+      <ul class="mb-0 muted ps-3"><li>Predictions are statistical estimates and can be wrong (sarcasm, mixed opinions, unfamiliar wording).</li>
+      <li>The bundled model is trained on synthetic demonstration data; retrain on real labelled feedback.</li>
+      <li>Sentiment is not a diagnosis and must not be used alone to judge or discipline anyone.</li></ul></div></div>
+  </div>
+</section>
+<footer class="container pb-4 muted small">Sentinel HR · Final-year B.Tech AI &amp; Data Science project · Human Resource Management (GE3754)</footer>
+</body>
+</html>

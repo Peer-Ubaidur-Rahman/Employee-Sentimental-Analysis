@@ -1,0 +1,56 @@
+{% from "_macros.html" import flashes %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Sentinel HR{% endblock %} · Sentinel HR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/sentinel.css') }}" rel="stylesheet">
+</head>
+<body>
+{% set ep = request.endpoint or '' %}
+<aside class="sidebar" id="sidebar" aria-label="Primary">
+  <div class="brand"><div class="brand-mark"><i class="bi bi-shield-check"></i></div><span>Sentinel HR</span></div>
+  <nav>
+  {% if current_kind == 'admin' %}
+    <div class="nav-section">Workforce intelligence</div>
+    <a class="nav-item-link {{ 'active' if ep == 'admin.dashboard' }}" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-grid-1x2"></i><span>Overview</span></a>
+    <a class="nav-item-link {{ 'active' if ep == 'admin.feedback_explorer' }}" href="{{ url_for('admin.feedback_explorer') }}"><i class="bi bi-chat-square-text"></i><span>Feedback explorer</span></a>
+    <a class="nav-item-link {{ 'active' if ep == 'admin.department_insights' }}" href="{{ url_for('admin.department_insights') }}"><i class="bi bi-diagram-3"></i><span>Departments</span></a>
+    <div class="nav-section">Administration</div>
+    <a class="nav-item-link {{ 'active' if ep == 'admin.employee_directory' }}" href="{{ url_for('admin.employee_directory') }}"><i class="bi bi-people"></i><span>Employee directory</span></a>
+    <a class="nav-item-link {{ 'active' if ep == 'admin.reports' }}" href="{{ url_for('admin.reports') }}"><i class="bi bi-file-earmark-bar-graph"></i><span>Reports</span></a>
+  {% elif current_kind == 'employee' %}
+    <div class="nav-section">My workspace</div>
+    <a class="nav-item-link {{ 'active' if ep == 'employee.dashboard' }}" href="{{ url_for('employee.dashboard') }}"><i class="bi bi-house"></i><span>Dashboard</span></a>
+    <a class="nav-item-link {{ 'active' if ep == 'employee.submit_feedback' }}" href="{{ url_for('employee.submit_feedback') }}"><i class="bi bi-pencil-square"></i><span>Submit feedback</span></a>
+    <a class="nav-item-link {{ 'active' if ep == 'employee.history' }}" href="{{ url_for('employee.history') }}"><i class="bi bi-clock-history"></i><span>My history</span></a>
+    <a class="nav-item-link {{ 'active' if ep == 'employee.profile' }}" href="{{ url_for('employee.profile') }}"><i class="bi bi-person-gear"></i><span>Profile</span></a>
+  {% endif %}
+  </nav>
+  <div class="sidebar-footer">
+    <div class="who">{{ current_name }}</div>
+    <div class="role">{{ 'HR Administrator' if current_admin_role == 'hr_admin' else ('HR Analyst (read-only)' if current_kind == 'admin' else 'Employee') }}</div>
+    <form method="post" action="{{ url_for('auth.logout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn-signout" type="submit"><i class="bi bi-box-arrow-right"></i> <span>Sign out</span></button>
+    </form>
+  </div>
+</aside>
+<div class="scrim" id="scrim"></div>
+<div class="main">
+  <div class="topbar"><button id="menuToggle" aria-label="Open navigation"><i class="bi bi-list"></i></button><strong>Sentinel HR</strong></div>
+  <main class="content">
+    {{ flashes() }}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/sentinel.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

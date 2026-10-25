@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_macros.html" import chip, sbar %}
+{% block title %}My dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Hello, {{ me.full_name.split(' ')[0] }}</h1>
+    <p>{{ me.role_title }} · {{ me.department }} · {{ me.emp_code }}</p></div>
+  <a class="btn btn-primary" href="{{ url_for('employee.submit_feedback') }}"><i class="bi bi-pencil-square"></i> Submit feedback</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><div class="card-s p-3"><div class="metric-label">Feedback submitted</div><div class="metric-value">{{ total }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card-s p-3"><div class="metric-label">Positive</div><div class="metric-value c-pos">{{ counts.Positive }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card-s p-3"><div class="metric-label">Neutral</div><div class="metric-value c-neu">{{ counts.Neutral }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card-s p-3"><div class="metric-label">Negative</div><div class="metric-value c-neg">{{ counts.Negative }}</div></div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card-s">
+      <div class="card-head"><h3>Recent feedback</h3><a href="{{ url_for('employee.history') }}">View all</a></div>
+      {% if recent %}
+      <div class="table-wrap"><table class="table-s table-stack">
+        <thead><tr><th>Submitted</th><th>Feedback</th><th>Rating</th><th>Predicted sentiment</th></tr></thead>
+        <tbody>{% for r in recent %}
+          <tr><td data-label="Submitted">{{ r.submitted_at|fmt_dt }}</td>
+              <td data-label="Feedback"><div class="clip">{{ r.feedback_text }}</div></td>
+              <td data-label="Rating" class="num">{{ r.overall_rating or '–' }}</td>
+              <td data-label="Sentiment">{{ chip(r.sentiment) }}</td></tr>
+        {% endfor %}</tbody></table></div>
+      {% else %}
+      <div class="empty"><i class="bi bi-chat-square-text"></i>You haven't submitted any feedback yet.<br>
+        <a class="btn btn-primary btn-sm mt-3" href="{{ url_for('employee.submit_feedback') }}">Share your first feedback</a></div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card-s mb-3"><div class="card-head"><h3>Quick actions</h3></div><div class="card-body-s d-grid gap-2">
+      <a class="btn btn-outline-s text-start" href="{{ url_for('employee.submit_feedback') }}"><i class="bi bi-pencil-square me-2"></i>Submit feedback</a>
+      <a class="btn btn-outline-s text-start" href="{{ url_for('employee.history') }}"><i class="bi bi-clock-history me-2"></i>View history</a>
+      <a class="btn btn-outline-s text-start" href="{{ url_for('employee.profile') }}"><i class="bi bi-person-gear me-2"></i>Update profile</a></div></div>
+    <div class="notice"><strong>Privacy:</strong> only you can see your history. HR sees feedback with your name unless you
+      tick "submit anonymously". Sentiment labels are automated estimates, not an assessment of you.</div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% from "_macros.html" import chip, sbar %}
+{% block title %}Executive overview{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Executive workforce overview</h1><p>Sentiment predicted by a TF-IDF + Logistic Regression model · last {{ days }} days</p></div>
+  <div class="btn-group" role="group" aria-label="Period">
+    {% for p in periods %}<a class="btn btn-sm {{ 'btn-primary' if p == days else 'btn-outline-s' }}" href="{{ url_for('admin.dashboard', days=p) }}">{{ p }}d</a>{% endfor %}
+  </div>
+</div>
+
+{% if not model_ready %}
+<div class="notice notice-warn mb-3"><strong>No trained model found.</strong> Employees cannot submit feedback until you run <code>python train_model.py</code>.</div>
+{% elif model_meta.get('dataset_is_synthetic') %}
+<div class="notice notice-warn mb-3"><strong>Demonstration model.</strong> It was trained on SYNTHETIC data (version {{ model_meta.model_version }}).
+  Predictions are not validated on real employee feedback; retrain with your own labelled data before relying on them.</div>
+{% endif %}
+{% if low_sample %}
+<div class="notice mb-3">Only {{ total }} feedback item{{ '' if total == 1 else 's' }} in this period. Percentages from so few responses are not reliable.</div>
+{% endif %}
+
+<div class="row g-3 mb-3 row-cols-2 row-cols-lg-5">
+  <div class="col"><div class="card-s p-3"><div class="metric-label">Active employees</div><div class="metric-value">{{ employees }}</div></div></div>
+  <div class="col"><div class="card-s p-3"><div class="metric-label">Feedback analysed</div><div class="metric-value">{{ total }}</div></div></div>
+  <div class="col"><div class="card-s p-3"><div class="metric-label">Positive</div><div class="metric-value c-pos">{{ pct.Positive }}%</div><div class="metric-sub">{{ counts.Positive }} items</div></div></div>
+  <div class="col"><div class="card-s p-3"><div class="metric-label">Neutral</div><div class="metric-value c-neu">{{ pct.Neutral }}%</div><div class="metric-sub">{{ counts.Neutral }} items</div></div></div>
+  <div class="col"><div class="card-s p-3"><div class="metric-label">Negative</div><div class="metric-value c-neg">{{ pct.Negative }}%</div><div class="metric-sub">{{ counts.Negative }} items</div></div></div>
+</div>
+
+{% if total %}
+<div class="row g-3 mb-3">
+  <div class="col-lg-4"><div class="card-s h-100"><div class="card-head"><h3>Sentiment distribution</h3></div>
+    <div class="card-body-s"><div class="chart-box"><canvas id="distChart" aria-label="Sentiment distribution chart" role="img"></canvas></div></div></div></div>
+  <div class="col-lg-8"><div class="card-s h-100"><div class="card-head"><h3>Sentiment trend</h3><span class="muted small">items per day</span></div>
+    <div class="card-body-s"><div class="chart-box"><canvas id="trendChart" aria-label="Daily sentiment trend chart" role="img"></canvas></div></div></div></div>
+</div>
+{% else %}
+<div class="card-s mb-3"><div class="empty"><i class="bi bi-graph-up"></i>No feedback has been submitted in this period yet.<br>Charts appear automatically once employees submit feedback.</div></div>
+{% endif %}
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-7"><div class="card-s h-100"><div class="card-head"><h3>Department cohorts</h3>
+      <span class="muted small">Groups under {{ min_group }} items are hidden for privacy</span></div>
+    <div class="table-wrap"><table class="table-s table-stack">
+      <thead><tr><th>Department</th><th class="num">Items</th><th style="min-width:160px">Positive / Neutral / Negative</th><th class="num">Positive</th><th class="num">Negative</th></tr></thead>
+      <tbody>{% for d in depts %}
+        <tr><td data-label="Department">{{ d.name }}</td><td data-label="Items" class="num">{{ d.n }}</td>
+          {% if d.pos_pct is defined %}
+            <td data-label="Mix">{{ sbar(d.pos_pct, d.neu_pct, d.neg_pct) }}</td><td data-label="Positive" class="num c-pos">{{ d.pos_pct }}%</td><td data-label="Negative" class="num c-neg">{{ d.neg_pct }}%</td>
+          {% elif d.suppressed %}<td colspan="3" class="muted">Hidden: fewer than {{ min_group }} items</td>
+          {% else %}<td colspan="3" class="muted">No feedback in period</td>{% endif %}</tr>
+      {% endfor %}</tbody></table></div></div></div>
+  <div class="col-lg-5"><div class="card-s h-100"><div class="card-head"><h3>Department sentiment mix</h3></div>
+    <div class="card-body-s">{% if chart.departments %}<div class="chart-box"><canvas id="deptChart" aria-label="Sentiment by department chart" role="img"></canvas></div>
+      {% else %}<div class="empty"><i class="bi bi-bar-chart"></i>No department has enough feedback to display.</div>{% endif %}</div></div></div>
+</div>
+
+<div class="card-s">
+  <div class="card-head"><h3>Latest feedback</h3><a href="{{ url_for('admin.feedback_explorer') }}">Open explorer</a></div>
+  {% if latest %}
+  <div class="table-wrap"><table class="table-s table-stack">
+    <thead><tr><th>Submitted</th><th>From</th><th>Department</th><th>Feedback</th><th>Sentiment</th></tr></thead>
+    <tbody>{% for r in latest %}
+      <tr><td data-label="Submitted">{{ r.submitted_at|fmt_dt }}</td><td data-label="From">{{ r.submitter }}</td><td data-label="Department">{{ r.department }}</td>
+          <td data-label="Feedback"><div class="clip">{{ r.feedback_text }}</div></td><td data-label="Sentiment">{{ chip(r.sentiment) }}</td></tr>
+    {% endfor %}</tbody></table></div>
+  {% else %}<div class="empty"><i class="bi bi-inbox"></i>No feedback has been submitted yet.</div>{% endif %}
+</div>
+<p class="muted small mt-3">Sentiment labels are model predictions, not diagnoses or measures of any individual's attitude.</p>
+<script id="chart-data" type="application/json">{{ chart|tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard_charts.js') }}"></script>
+{% endblock %}

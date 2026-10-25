@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Reports</h1><p>Computed from stored predictions. Months with fewer than {{ min_group }} items hide the sentiment split.</p></div>
+  {% if is_full %}<div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-s" href="{{ url_for('admin.export_departments') }}"><i class="bi bi-download"></i> Departments CSV</a>
+    <a class="btn btn-outline-s" href="{{ url_for('admin.export_feedback') }}"><i class="bi bi-download"></i> Feedback CSV (no text)</a>
+    <a class="btn btn-outline-s" href="{{ url_for('admin.export_feedback', include_text=1) }}" onclick="return confirm('This export includes free-text feedback. Handle it as confidential. Continue?')"><i class="bi bi-download"></i> Feedback CSV with text</a></div>
+  {% else %}<span class="chip chip-none">CSV export requires HR Administrator role</span>{% endif %}</div>
+
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card-s"><div class="card-head"><h3>Monthly summary (last 12 months)</h3></div>
+    {% if monthly %}<div class="table-wrap"><table class="table-s table-stack">
+      <thead><tr><th>Month</th><th class="num">Items</th><th class="num">Positive</th><th class="num">Neutral</th><th class="num">Negative</th><th class="num">Avg rating</th></tr></thead>
+      <tbody>{% for m in monthly %}<tr><td data-label="Month">{{ m.month }}</td><td data-label="Items" class="num">{{ m.n }}</td>
+        {% if m.suppressed %}<td colspan="3" class="muted">Hidden (n &lt; {{ min_group }})</td>{% else %}
+        <td data-label="Positive" class="num c-pos">{{ m.pos }}</td><td data-label="Neutral" class="num c-neu">{{ m.neu }}</td><td data-label="Negative" class="num c-neg">{{ m.neg }}</td>{% endif %}
+        <td data-label="Avg rating" class="num">{{ m.avg_rating if m.avg_rating is not none else '–' }}</td></tr>{% endfor %}</tbody></table></div>
+    {% else %}<div class="empty"><i class="bi bi-calendar3"></i>No feedback in the last 12 months.</div>{% endif %}</div></div>
+  <div class="col-lg-6"><div class="card-s"><div class="card-head"><h3>Department summary (last 365 days)</h3></div>
+    <div class="table-wrap"><table class="table-s table-stack">
+      <thead><tr><th>Department</th><th class="num">Items</th><th class="num">Positive %</th><th class="num">Neutral %</th><th class="num">Negative %</th></tr></thead>
+      <tbody>{% for d in depts %}<tr><td data-label="Department">{{ d.name }}</td><td data-label="Items" class="num">{{ d.n }}</td>
+        {% if d.pos_pct is defined %}<td data-label="Positive" class="num c-pos">{{ d.pos_pct }}</td><td data-label="Neutral" class="num c-neu">{{ d.neu_pct }}</td><td data-label="Negative" class="num c-neg">{{ d.neg_pct }}</td>
+        {% else %}<td colspan="3" class="muted">{{ 'Hidden (n < ' ~ min_group ~ ')' if d.suppressed else 'No feedback' }}</td>{% endif %}</tr>{% endfor %}</tbody></table></div></div></div>
+</div>
+
+{% if is_full %}
+<div class="card-s mt-3"><div class="card-head"><h3>Recent audit activity</h3><span class="muted small">Last 20 events</span></div>
+  {% if audit_rows %}<div class="table-wrap"><table class="table-s table-stack">
+    <thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Target</th><th>IP</th></tr></thead>
+    <tbody>{% for a in audit_rows %}<tr><td data-label="Time">{{ a.created_at|fmt_dt }}</td><td data-label="Actor">{{ a.actor_type }}{{ ' #' ~ a.actor_id if a.actor_id }}</td>
+      <td data-label="Action">{{ a.action }}</td><td data-label="Target">{{ a.target_type or '' }} {{ a.target_id or '' }}</td><td data-label="IP">{{ a.ip_address or '' }}</td></tr>{% endfor %}</tbody></table></div>
+  {% else %}<div class="empty"><i class="bi bi-journal-text"></i>No audit events recorded yet.</div>{% endif %}</div>
+{% endif %}
+{% endblock %}
